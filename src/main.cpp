@@ -16,7 +16,7 @@ Switch3Way read3WaySwitch(byte channelInput, Switch3Way defaultValue);
 void setup() {
   debugSerial.begin(115200);           // Debug serial
   ibusRc.begin(ibusRcSerial);     // Start iBus on Serial1
-  Serial.println("iBus receiver started.");
+  debugSerial.println("iBus Receiver Control Subsystem Initialized.");
 }
 
 void loop() {
@@ -38,6 +38,7 @@ void loop() {
     debugSerial.print("\t");
   }
   debugSerial.println();
+
   delay(20);  // 20ms matches the typical iBUS frame transmission rate
 }
 
