@@ -1,39 +1,11 @@
 #include <Arduino.h>
 #include "RcController.h"
+#include "robotConfig.h"
 
-/* =========================================================================================
- *                          ARDUINO MEGA 2560 - SERIAL PINOUT MAP
- * =========================================================================================
- * 
- *  [SERIAL] -> HARDWARE USB INTERFACE (PC DEBUGGING)
- *  ----------------------------------------------------------------------------------------
- *  - Purpose: For sending live diagnostic tracking data to your computer's Serial Monitor.
- *  - Pins:    Uses internal ATMega16U2 chip mapped directly to the USB connection.
- *  - Speed:   Configured at 115200 Baud rate for lightweight, high-performance data streaming.
- * 
- *  [SERIAL1] -> iBUS RECEIVER OUT (STICK CHANNELS INPUT)
- *  ----------------------------------------------------------------------------------------
- *  - Purpose: For receiving live raw joystick data streams coming from your FlySky Receiver.
- *  - Pin 19 (RX1) <===== Connects to: iBUS "Servo" or "Out" data pin on the FlySky Receiver.
- *  - Pin 18 (TX1) <===== LEAVE UNCONNECTED. (This connection only listens for data frames).
- * 
- *  [SERIAL2] -> iBUS SENSOR Telemetry (HALF-DUPLEX TELEMETRY DATA LOOP)
- *  ----------------------------------------------------------------------------------------
- *  - Purpose: For bi-directional telemetry communication (sending Ex.V Battery data to TX).
- *  - Pin 16 (RX2) <---┐
- *                     ├── [ 1.2k Ohm Resistor ] <== Connects to: FlySky "Sens" (SENS) Port.
- *  - Pin 17 (TX2) <---┘
- * 
- *  * ELECTRICAL NOTE FOR SERIAL2 TELEMETRY: 
- *    The FlySky telemetry port uses a single wire for both transmitting and receiving data 
- *    (Half-Duplex). To share this wire safely on the Mega's split RX2/TX2 system, bridge Pin 16 
- *    and Pin 17 together using a 1.2k Ohm resistor, then run the wire out from Pin 16 (RX2) 
- *    directly into the Receiver's SENS pin.
- * ========================================================================================= */
 RcController FScontroller(Serial1, Serial2, Serial);
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(MON_BAUD_RATE);
   FScontroller.begin();
 }
 
