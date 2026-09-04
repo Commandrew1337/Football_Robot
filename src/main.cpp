@@ -53,8 +53,8 @@ void loop() {
     // Read and interpret stick movements smoothly.
     // If transmitter is off, these will automatically return whatever default failsafe 
     // values you configured directly inside your FlySky Transmitter setup menu.
-    int throttle = FScontroller.readChannel(2, -255, 255, 0); 
-    int steering = FScontroller.readChannel(0, -255, 255, 0); 
+    //int throttle = FScontroller.readChannel(2, -255, 255, 0); 
+    //int steering = FScontroller.readChannel(0, -255, 255, 0); 
 
     // ==> EXECUTE DRIVING OUTPUT SCHEDULERS HERE <==
 
