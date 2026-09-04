@@ -1,95 +1,45 @@
 #include <Arduino.h>
-#include <IBusBM.h>
+#include "RcController.cpp"
 
-IBusBM ibusRc;
-IBusBM ibusSens;
-
-HardwareSerial& debugSerial = Serial;
-HardwareSerial& ibusRcSerial = Serial1; // Uses RX1 (Pin 19) on Arduino Mega
-HardwareSerial& ibusSensSerial = Serial2; // Uses TX2 (Pin 17) and RX2 (Pin 16) pn Arduno Mega. Half Duplex so 1.2kohm between them.
-
-// Define easy-to-read names for your 3-way switch positions
-enum Switch3Way {SWITCH_UP,SWITCH_MID,SWITCH_DOWN};
-
-//Function Prototypes
-int readChannel(byte channelInput, int minLimit, int maxLimit, int defaultValue);
-bool readSwitch(byte channelInput, bool defaultValue);
-Switch3Way read3WaySwitch(byte channelInput, Switch3Way defaultValue);
+// Instantiate the custom RC controller object globally by passing your hardware serial objects
+RcController controller(Serial1, Serial2, Serial);
 
 void setup() {
-  debugSerial.begin(115200);           // Debug serial
-  ibusRc.begin(ibusRcSerial);     // Start iBus on Serial1
-  ibusSens.begin(ibusSensSerial,IBUSBM_NOTIMER); // Start the telemetry stream on Serial2. IBUSBM_NOTIMER keeps this instance from interfering with the main receiver timing
-  ibusSens.addSensor(IBUSS_EXTV); //Formally register Slot 1 as an External Voltage field
-  debugSerial.println("iBus Receiver and Telemetry Subsystems Initialized.");
+  Serial.begin(115200); // Debug serial to PC
+  controller.begin();   // Initialize all internal radio subsystems
 }
 
 void loop() {
-  // CRUCIAL: Process incoming telemetry poll signals from the receiver immediately.
-  // Must run at the absolute top so it stays alive even if the TX turns off
-  ibusSens.loop();
+  // 1. RUN CONSTANTLY: Processes radio signals at full microprocessor speed.
+  // Never place a blocking delay() anywhere in this loop!
+  controller.update(); 
 
-  // Check if the transmitter is turned off or disconnected
-  // The library returns 0 on channel 0 if no valid RC packets are coming in
-  if (ibusRc.readChannel(0) == 0) {
-    debugSerial.println("WARNING: Signal Lost / Transmitter Disconnected!");
-    delay(500);
-    return; // Skip reading channels if link is dead
-    }
-
-  // Read and print all 10 channels
-  for (int i = 0; i < 10; i++) {
-    int value = readChannel(i, -100, 100, 0);
-    debugSerial.print("Ch");
-    debugSerial.print(i + 1);
-    debugSerial.print(": ");
-    debugSerial.print(value);
-    debugSerial.print("\t");
+  // 2. SAFETY FAIL-SAFE: If connection drops, stop here before moving motors
+  if (!controller.isConnected()) {
+    // ==> PUT EMERGENCY STOP CODE HERE (e.g., turn off motor pins) <==
+    return; 
   }
-  debugSerial.println();
 
-  // Handle live robot telemetry processing
-  int liveBatteryVolt = 1240; // Represents 12.40V (sent as raw 1240)
-  ibusSens.setSensorMeasurement(1, liveBatteryVolt);
+  // 3. THE 20ms HEARTBEAT GATE: 
+  // All motor speeds, steering positions, and telemetry must be updated inside here!
+  if (controller.isReadyToProcess()) {
+    
+    // A. Gather your driving inputs (Perfectly synchronized with the 20ms radio transmission)
+    int throttle = controller.readChannel(2, -255, 255, 0); // Ch3: Typical Throttle Stick
+    int steering = controller.readChannel(0, -255, 255, 0); // Ch1: Typical Roll/Steer Stick
+    
+    // B. ==> PUT MOTOR DRIVER UPDATES HERE <==
+    // This runs exactly 50 times per second, giving motor chips a clean, steady control signal.
+    // Examples:
+    // analogWrite(leftMotorPin, throttle); 
+    // steeringServo.write(steering);
 
-  delay(20);  // 20ms matches the typical iBUS frame transmission rate
-}
+    // C. Send live data back to FlySky Transmitter screen (Capped to 20ms to avoid flooding buffers)
+    int liveBatteryVolt = 1240; // 12.40V
+    controller.sendBatteryVoltage(liveBatteryVolt);
 
-
-// Read the channel and convert to the range provided, constrained safely
-int readChannel(byte channelInput, int minLimit, int maxLimit, int defaultValue){
-  uint16_t ch = ibusRc.readChannel(channelInput);
-
-  // If the library returns 0, it means it hasn't received data for this channel yet
-  if (ch == 0) return defaultValue;
-
-  // Map the value and constrain it so it never goes past minLimit or maxLimit
-  int mappedValue = map(ch, 1000, 2000, minLimit, maxLimit);
-  return constrain(mappedValue, minLimit, maxLimit);
-}
-
-// Read a standard 2-way switch and return a boolean value
-bool readSwitch(byte channelInput, bool defaultValue){
-  int intDefaultValue = (defaultValue)? 100: 0;
-  int ch = readChannel(channelInput, 0, 100, intDefaultValue);
-  return (ch > 50);
-}
-
-// Read a 3-way switch (like SwC) and return UP, MID, or DOWN state
-Switch3Way read3WaySwitch(byte channelInput, Switch3Way defaultValue) {
-  uint16_t ch = ibusRc.readChannel(channelInput);
-
-  // If the library returns 0, use the chosen default position
-  if (ch == 0) return defaultValue;
-
-  // Evaluate based on the FS-i6X physical signal ranges
-  if (ch > 1750) {
-    return SWITCH_UP;     // Raw pulse width sits around 2000
-    }
-    else if (ch >= 1250 && ch <= 1750) {
-      return SWITCH_MID;    // Raw pulse width sits around 1500
-      }
-      else {
-        return SWITCH_DOWN;   // Raw pulse width sits around 1000
-        }
+    // D. Safe to call debug printing. The object will throttle itself internally 
+    // to print slowly, keeping your driving experience perfectly smooth.
+    controller.printDebugChannels(); 
+  }
 }
