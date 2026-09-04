@@ -2,8 +2,11 @@
 #include <IBusBM.h>
 
 IBusBM ibusRc;
+IBusBM ibusSens;
+
 HardwareSerial& debugSerial = Serial;
 HardwareSerial& ibusRcSerial = Serial1; // Uses RX1 (Pin 19) on Arduino Mega
+HardwareSerial& ibusSensSerial = Serial2; // Uses TX2 (Pin 17) and RX2 (Pin 16) pn Arduno Mega. Half Duplex so 1.2kohm between them.
 
 // Define easy-to-read names for your 3-way switch positions
 enum Switch3Way {SWITCH_UP,SWITCH_MID,SWITCH_DOWN};
@@ -16,10 +19,16 @@ Switch3Way read3WaySwitch(byte channelInput, Switch3Way defaultValue);
 void setup() {
   debugSerial.begin(115200);           // Debug serial
   ibusRc.begin(ibusRcSerial);     // Start iBus on Serial1
-  debugSerial.println("iBus Receiver Control Subsystem Initialized.");
+  ibusSens.begin(ibusSensSerial,IBUSBM_NOTIMER); // Start the telemetry stream on Serial2. IBUSBM_NOTIMER keeps this instance from interfering with the main receiver timing
+  ibusSens.addSensor(IBUSS_EXTV); //Formally register Slot 1 as an External Voltage field
+  debugSerial.println("iBus Receiver and Telemetry Subsystems Initialized.");
 }
 
 void loop() {
+  // CRUCIAL: Process incoming telemetry poll signals from the receiver immediately.
+  // Must run at the absolute top so it stays alive even if the TX turns off
+  ibusSens.loop();
+
   // Check if the transmitter is turned off or disconnected
   // The library returns 0 on channel 0 if no valid RC packets are coming in
   if (ibusRc.readChannel(0) == 0) {
@@ -38,6 +47,10 @@ void loop() {
     debugSerial.print("\t");
   }
   debugSerial.println();
+
+  // Handle live robot telemetry processing
+  int liveBatteryVolt = 1240; // Represents 12.40V (sent as raw 1240)
+  ibusSens.setSensorMeasurement(1, liveBatteryVolt);
 
   delay(20);  // 20ms matches the typical iBUS frame transmission rate
 }
