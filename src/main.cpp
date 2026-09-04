@@ -1,45 +1,68 @@
 #include <Arduino.h>
-#include "RcController.cpp"
+#include "RcController.h"
 
-// Instantiate the custom RC controller object globally by passing your hardware serial objects
-RcController controller(Serial1, Serial2, Serial);
+/* =========================================================================================
+ *                          ARDUINO MEGA 2560 - SERIAL PINOUT MAP
+ * =========================================================================================
+ * 
+ *  [SERIAL] -> HARDWARE USB INTERFACE (PC DEBUGGING)
+ *  ----------------------------------------------------------------------------------------
+ *  - Purpose: For sending live diagnostic tracking data to your computer's Serial Monitor.
+ *  - Pins:    Uses internal ATMega16U2 chip mapped directly to the USB connection.
+ *  - Speed:   Configured at 115200 Baud rate for lightweight, high-performance data streaming.
+ * 
+ *  [SERIAL1] -> iBUS RECEIVER OUT (STICK CHANNELS INPUT)
+ *  ----------------------------------------------------------------------------------------
+ *  - Purpose: For receiving live raw joystick data streams coming from your FlySky Receiver.
+ *  - Pin 19 (RX1) <===== Connects to: iBUS "Servo" or "Out" data pin on the FlySky Receiver.
+ *  - Pin 18 (TX1) <===== LEAVE UNCONNECTED. (This connection only listens for data frames).
+ * 
+ *  [SERIAL2] -> iBUS SENSOR Telemetry (HALF-DUPLEX TELEMETRY DATA LOOP)
+ *  ----------------------------------------------------------------------------------------
+ *  - Purpose: For bi-directional telemetry communication (sending Ex.V Battery data to TX).
+ *  - Pin 16 (RX2) <---┐
+ *                     ├── [ 1.2k Ohm Resistor ] <== Connects to: FlySky "Sens" (SENS) Port.
+ *  - Pin 17 (TX2) <---┘
+ * 
+ *  * ELECTRICAL NOTE FOR SERIAL2 TELEMETRY: 
+ *    The FlySky telemetry port uses a single wire for both transmitting and receiving data 
+ *    (Half-Duplex). To share this wire safely on the Mega's split RX2/TX2 system, bridge Pin 16 
+ *    and Pin 17 together using a 1.2k Ohm resistor, then run the wire out from Pin 16 (RX2) 
+ *    directly into the Receiver's SENS pin.
+ * ========================================================================================= */
+RcController FScontroller(Serial1, Serial2, Serial);
 
 void setup() {
-  Serial.begin(115200); // Debug serial to PC
-  controller.begin();   // Initialize all internal radio subsystems
+  Serial.begin(115200);
+  FScontroller.begin();
 }
 
 void loop() {
-  // 1. RUN CONSTANTLY: Processes radio signals at full microprocessor speed.
-  // Never place a blocking delay() anywhere in this loop!
-  controller.update(); 
+  FScontroller.update(); // Keep background telemetry and serial caching alive
 
-  // 2. SAFETY FAIL-SAFE: If connection drops, stop here before moving motors
-  if (!controller.isConnected()) {
-    // ==> PUT EMERGENCY STOP CODE HERE (e.g., turn off motor pins) <==
+  // HARDWARE SAFEGUARD: Stops code execution instantly if the physical iBUS cable 
+  // shakes loose or loses power, preventing a dangerous runaway robot scenario!
+  if (!FScontroller.isReceiverHardwareConnected()) {
+    // ==> PLACE SYSTEM KILL / EMERGENCY BRAKING COMMANDS HERE <==
     return; 
   }
 
-  // 3. THE 20ms HEARTBEAT GATE: 
-  // All motor speeds, steering positions, and telemetry must be updated inside here!
-  if (controller.isReadyToProcess()) {
+  // Execute operations within the steady 20ms frame interval
+  if (FScontroller.isReadyToProcess()) {
     
-    // A. Gather your driving inputs (Perfectly synchronized with the 20ms radio transmission)
-    int throttle = controller.readChannel(2, -255, 255, 0); // Ch3: Typical Throttle Stick
-    int steering = controller.readChannel(0, -255, 255, 0); // Ch1: Typical Roll/Steer Stick
-    
-    // B. ==> PUT MOTOR DRIVER UPDATES HERE <==
-    // This runs exactly 50 times per second, giving motor chips a clean, steady control signal.
-    // Examples:
-    // analogWrite(leftMotorPin, throttle); 
-    // steeringServo.write(steering);
+    // Read and interpret stick movements smoothly.
+    // If transmitter is off, these will automatically return whatever default failsafe 
+    // values you configured directly inside your FlySky Transmitter setup menu.
+    int throttle = FScontroller.readChannel(2, -255, 255, 0); 
+    int steering = FScontroller.readChannel(0, -255, 255, 0); 
 
-    // C. Send live data back to FlySky Transmitter screen (Capped to 20ms to avoid flooding buffers)
-    int liveBatteryVolt = 1240; // 12.40V
-    controller.sendBatteryVoltage(liveBatteryVolt);
+    // ==> EXECUTE DRIVING OUTPUT SCHEDULERS HERE <==
 
-    // D. Safe to call debug printing. The object will throttle itself internally 
-    // to print slowly, keeping your driving experience perfectly smooth.
-    controller.printDebugChannels(); 
+    // Feed current system voltage reading back to FScontroller screen
+    int liveBatteryVolt = 1240; 
+    FScontroller.sendBatteryVoltage(liveBatteryVolt);
+
+    // Call diagnostic tool safely without introducing motor stuttering lags
+    FScontroller.printDebugChannels(); 
   }
 }
