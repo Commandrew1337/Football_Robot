@@ -9,6 +9,8 @@
 #include "RobotDrive.h"
 
 RcController FScontroller(Serial1, Serial2, Serial);
+RelayValve singlerelay1(robotConfig::RELAY_IN1, true);
+RelayValve singlerelay2(robotConfig::RELAY_IN2, true);
 
 void setup() {
   Serial.begin(MON_BAUD_RATE);
@@ -39,6 +41,9 @@ void loop() {
     // Feed current system voltage reading back to FScontroller screen
     int liveBatteryVolt = 1240; 
     FScontroller.sendBatteryVoltage(liveBatteryVolt);
+
+    FScontroller.readSwitch(robotConfig::CH_SWA, false) ? singlerelay1.activate() : singlerelay1.deactivate();
+    FScontroller.readSwitch(robotConfig::CH_SWB, false) ? singlerelay2.activate() : singlerelay2.deactivate();
 
     // Call diagnostic tool safely without introducing motor stuttering lags
     FScontroller.printDebugChannels(); 
