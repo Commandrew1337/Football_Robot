@@ -10,10 +10,10 @@ namespace robotConfig {
     // ============================================================================
     // "byte" = "uint8_t"
 
-    const uint8_t RELAY_IN1 = 46;
-    const uint8_t RELAY_IN2 = 48;
-    const uint8_t RELAY_IN3 = 50;
-    const uint8_t RELAY_IN4 = 52;
+    const uint8_t RELAY_IN1 = 24;
+    const uint8_t RELAY_IN2 = 25;
+    const uint8_t RELAY_IN3 = 26;
+    const uint8_t RELAY_IN4 = 27;
 
     constexpr uint8_t COMPRESSOR_PRESSURE_SWITCH = 8;
     constexpr uint8_t COMPRESSOR_SPIKE_REVERSE = 9;
