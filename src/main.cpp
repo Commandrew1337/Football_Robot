@@ -5,6 +5,7 @@
 #include "PWMMotorController.h"
 #include "RSL.h"
 #include "RelayValve.h"
+#include "Compressor.h"
 
 #include "RobotDrive.h"
 
@@ -12,6 +13,8 @@ RcController FScontroller(Serial1, Serial2, Serial);
 RelayValve singlerelay1(robotConfig::RELAY_IN3, true);
 RelayValve singlerelay2(robotConfig::RELAY_IN4, true);
 RelayValve doublerelay3(robotConfig::RELAY_IN1, robotConfig::RELAY_IN2, 100, true);
+Compressor m_compressor(robotConfig::COMPRESSOR_PRESSURE_SWITCH, robotConfig::COMPRESSOR_SPIKE_FORWARD, robotConfig::COMPRESSOR_SPIKE_REVERSE);
+RSL m_RSL(robotConfig::RSL_PIN);
 
 void setup() {
   Serial.begin(MON_BAUD_RATE);
@@ -21,10 +24,19 @@ void setup() {
 void loop() {
   FScontroller.update(); // Keep background telemetry and serial caching alive
 
+  bool robotEnabled = FScontroller.isReceiverHardwareConnected();
+  m_RSL.setEnabled(robotEnabled);
+
+  m_compressor.update();
+  m_RSL.update();
+
   // HARDWARE SAFEGUARD: Stops code execution instantly if the physical iBUS cable 
   // shakes loose or loses power, preventing a dangerous runaway robot scenario!
-  if (!FScontroller.isReceiverHardwareConnected()) {
+  if (!robotEnabled) {
     // ==> PLACE SYSTEM KILL / EMERGENCY BRAKING COMMANDS HERE <==
+    singlerelay1.deactivate();
+    singlerelay2.deactivate();
+    doublerelay3.deactivate();
     return; 
   }
 

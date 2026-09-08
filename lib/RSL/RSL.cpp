@@ -6,6 +6,7 @@ namespace
     constexpr unsigned long DISABLED_BLINK_MS = 500;  // Slow blink
 }
 
+// Constructor.
 RSL::RSL(uint8_t pin, bool inverted)
     : m_pin(pin),
       m_inverted(inverted),
@@ -13,19 +14,20 @@ RSL::RSL(uint8_t pin, bool inverted)
       m_outputState(false),
       m_lastToggle(0)
 {
-}
-
-void RSL::begin()
-{
+    // Configure output pin.
     pinMode(m_pin, OUTPUT);
+
+    // Ensure light starts OFF.
     setOutput(false);
 }
 
+// Set whether the robot is enabled.
 void RSL::setEnabled(bool enabled)
 {
     m_enabled = enabled;
 }
 
+// Update blink state.
 void RSL::update()
 {
     const unsigned long now = millis();
@@ -41,29 +43,10 @@ void RSL::update()
     }
 }
 
+// Apply output state to hardware.
 void RSL::setOutput(bool on)
 {
     digitalWrite(
         m_pin,
         (on ^ m_inverted) ? HIGH : LOW);
 }
-
-/*
-#include "RSL.h"
-
-RSL rsl(8); // MOSFET input on D8
-
-void setup()
-{
-    rsl.begin();
-}
-
-void loop()
-{
-    bool robotEnabled = true; // Replace with your enable logic
-
-    rsl.setEnabled(robotEnabled);
-
-    rsl.update();
-}
-*/

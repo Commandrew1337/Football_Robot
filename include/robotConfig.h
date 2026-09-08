@@ -8,22 +8,30 @@ namespace robotConfig {
     // ============================================================================
     // HARDWARE PIN CONFIGURATION (For Arduino Mega 2560)
     // ============================================================================
-    const byte RELAY_IN1 = 46;
-    const byte RELAY_IN2 = 48;
-    const byte RELAY_IN3 = 50;
-    const byte RELAY_IN4 = 52;
+    // "byte" = "uint8_t"
 
-    // Tank Drive Motors (Left side)
-    // #define PIN_MOTOR_L_PWM     2       // Speed control (PWM pin)
+    const uint8_t RELAY_IN1 = 46;
+    const uint8_t RELAY_IN2 = 48;
+    const uint8_t RELAY_IN3 = 50;
+    const uint8_t RELAY_IN4 = 52;
 
-    // Tank Drive Motors (Right side)
-    // #define PIN_MOTOR_R_PWM     3       // Speed control (PWM pin)
+    constexpr uint8_t COMPRESSOR_PRESSURE_SWITCH = 8;
+    constexpr uint8_t COMPRESSOR_SPIKE_REVERSE = 9;
+    constexpr uint8_t COMPRESSOR_SPIKE_FORWARD = 10;
 
-    // Football Flywheel Shooter Mechanisms
-    // #define PIN_SHOOTER_L_PWM   4       // Left flywheel speed (PWM pin)
-    // #define PIN_SHOOTER_R_PWM   5       // Right flywheel speed (PWM pin)
-    // #define PIN_FEEDER_SERVO    9       // Servo pin that pushes football into flywheels
+    constexpr uint8_t HORN_SPIKE_REVERSE = 13;
+    constexpr uint8_t HORN_SPIKE_FORWARD = 12;
 
+    constexpr uint8_t RSL_PIN = 11;
+
+    constexpr uint8_t MLF = 2;
+    constexpr uint8_t MLR = 3;
+    constexpr uint8_t MRF = 4;
+    constexpr uint8_t MRR = 5;
+    constexpr uint8_t MT1 = 6;
+    constexpr uint8_t MT2 = 7;
+    constexpr uint8_t MT3 = 15;
+    constexpr uint8_t MT4 = 14;    
 
     // ============================================================================
     // ROBOT TUNING & CALIBRATION CONSTANTS
@@ -42,17 +50,19 @@ namespace robotConfig {
     // ============================================================================
     // iBUS Controller Channel Mapping (Shifted down by 1 for 0-indexing)
     // ============================================================================
-    const byte CH_ROLL     = 0;  // Physical Ch 1 (Right Stick X-axis)
-    const byte CH_PITCH    = 1;  // Physical Ch 2 (Right Stick Y-axis)
-    const byte CH_THROTTLE = 2;  // Physical Ch 3 (Left Stick Y-axis)
-    const byte CH_YAW      = 3;  // Physical Ch 4 (Left Stick X-axis)
+    constexpr uint8_t CH_ROLL     = 0;  // Physical Ch 1 (Right Stick X-axis)
+    constexpr uint8_t CH_PITCH    = 1;  // Physical Ch 2 (Right Stick Y-axis)
+    constexpr uint8_t CH_THROTTLE = 2;  // Physical Ch 3 (Left Stick Y-axis)
+    constexpr uint8_t CH_YAW      = 3;  // Physical Ch 4 (Left Stick X-axis)
     
-    const byte CH_SWA      = 4;  // Physical Ch 5 (Switch A)
-    const byte CH_SWB      = 5;  // Physical Ch 6 (Switch B)
-    const byte CH_VRA      = 6;  // Physical Ch 7 (Dial A)
-    const byte CH_VRB      = 7;  // Physical Ch 8 (Dial B)
-    const byte CH_SWC      = 8;  // Physical Ch 9 (Switch C)
-    const byte CH_SWD      = 9;  // Physical Ch 10 (Switch D)
+    constexpr uint8_t CH_SWA      = 4;  // Physical Ch 5 (Switch A)
+    constexpr uint8_t CH_SWB      = 5;  // Physical Ch 6 (Switch B)
+    constexpr uint8_t CH_VRA      = 6;  // Physical Ch 7 (Dial A)
+    constexpr uint8_t CH_VRB      = 7;  // Physical Ch 8 (Dial B)
+    constexpr uint8_t CH_SWC      = 8;  // Physical Ch 9 (Switch C)
+    constexpr uint8_t CH_SWD      = 9;  // Physical Ch 10 (Switch D)
+
+
 
     /* =========================================================================================
     *                          ARDUINO MEGA 2560 - SERIAL PINOUT MAP
