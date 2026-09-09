@@ -16,6 +16,8 @@ RelayValve doublerelay3(robotConfig::RELAY_IN1, robotConfig::RELAY_IN2, 100, tru
 Compressor m_compressor(robotConfig::COMPRESSOR_PRESSURE_SWITCH, robotConfig::COMPRESSOR_SPIKE_FORWARD, robotConfig::COMPRESSOR_SPIKE_REVERSE);
 RSL m_RSL(robotConfig::RSL_PIN);
 
+unsigned long lastSafetyCheckTime = 0;
+
 void setup() {
   Serial.begin(MON_BAUD_RATE);
   FScontroller.begin();
@@ -27,17 +29,22 @@ void loop() {
   bool robotEnabled = FScontroller.isReceiverHardwareConnected();
   m_RSL.setEnabled(robotEnabled);
 
-  m_compressor.update();
+  //m_compressor.update();
   m_RSL.update();
 
-  // HARDWARE SAFEGUARD: Stops code execution instantly if the physical iBUS cable 
-  // shakes loose or loses power, preventing a dangerous runaway robot scenario!
+  // HARDWARE SAFEGUARD: Executes if the controller is off or disconnected
   if (!robotEnabled) {
-    // ==> PLACE SYSTEM KILL / EMERGENCY BRAKING COMMANDS HERE <==
-    singlerelay1.deactivate();
-    singlerelay2.deactivate();
-    doublerelay3.deactivate();
-    return; 
+    unsigned long currentTime = millis();
+    
+    // Slow down the safety loop to execute only once every 200 milliseconds (5Hz)
+    if (currentTime - lastSafetyCheckTime >= 200) {
+      lastSafetyCheckTime = currentTime;
+      
+      singlerelay1.deactivate();
+      singlerelay2.deactivate();
+      doublerelay3.deactivate(); 
+    }
+    return; // Safe to return here because the timer throttles the code paths below
   }
 
   // Execute operations within the steady 20ms frame interval

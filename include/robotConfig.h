@@ -19,7 +19,7 @@ namespace robotConfig {
     constexpr uint8_t COMPRESSOR_SPIKE_REVERSE = 9;
     constexpr uint8_t COMPRESSOR_SPIKE_FORWARD = 10;
 
-    constexpr uint8_t HORN_SPIKE_REVERSE = 13;
+    constexpr uint8_t HORN_SPIKE_REVERSE = 22;
     constexpr uint8_t HORN_SPIKE_FORWARD = 12;
 
     constexpr uint8_t RSL_PIN = 11;
@@ -30,8 +30,8 @@ namespace robotConfig {
     constexpr uint8_t MRR = 5;
     constexpr uint8_t MT1 = 6;
     constexpr uint8_t MT2 = 7;
-    constexpr uint8_t MT3 = 15;
-    constexpr uint8_t MT4 = 14;    
+    constexpr uint8_t MT3 = 45;
+    constexpr uint8_t MT4 = 44;    
 
     // ============================================================================
     // ROBOT TUNING & CALIBRATION CONSTANTS
