@@ -2,8 +2,34 @@
 
 namespace robotConfig {
     // ============================================================================
-    // SYSTEM SETTINGS
+    // ⚠️ ARDUINO MEGA 2560 PIN SAFETY & RESERVATION WARNINGS
     // ============================================================================
+    // Before adding new pins, verify against these critical hardware rules:
+    //
+    // 🛑 DANGEROUS BOOTLOADER PINS (Do Not Use for Actuators/Relays)
+    //   - Pin 13 : Flashes rapidly at 50Hz+ during code uploads (Built-in 'L' LED).
+    //              Will fry relay contacts and cause dangerous accidental movements.
+    //
+    // 🛑 HARDWARE SERIAL RESERVATIONS (Do Not Use for Digital I/O or PWM)
+    //   - Pins 0  & 1  (Serial0) : Reserved for PC USB programming & Serial Monitor.
+    //   - Pins 18 & 19 (Serial1) : Reserved for your FlySky iBUS Receiver Input.
+    //   - Pins 16 & 17 (Serial2) : Reserved for your FlySky Telemetry Loop.
+    //   - Pins 14 & 15 (Serial3) : Keep EMPTY. Used for serial loops.
+    //
+    // ⚡ SERVO LIBRARY & PWM COMPATIBILITY RULES
+    //   - If using 'PWMMotorController' (Servo.h), you MUST use pins with 
+    //     internal hardware timers. 
+    //   - SAFE LOW PWM PINS  : 2, 3, 4, 5, 6, 7, 11, 12
+    //   - SAFE HIGH PWM PINS : 44, 45, 46 (Driven by high-precision Timer 5)
+    //   - DO NOT USE FOR MOTORS: Pins 22-43. These are pure digital pins lacking
+    //     hardware clocks. Servos assigned here will jitter, lag, or fail to arm.
+    //
+    // 🔌 ACTIVE-LOW RELAY BANK STARTUP SAFETY
+    //   - Pins 24-27 float LOW during power-on/boot text flushes.
+    //   - Ensure your setup() forces these HIGH before declaring them OUTPUTs
+    //     to prevent your compressor or valves from popping at startup.
+    // ============================================================================
+
 
     // ============================================================================
     // HARDWARE PIN CONFIGURATION (For Arduino Mega 2560)
