@@ -53,7 +53,7 @@ namespace robotConfig {
 
     constexpr uint8_t HORN_SPIKE_REVERSE = 22;
     constexpr uint8_t HORN_SPIKE_FORWARD = 12;
-    constexpr uint8_t RSL_PIN = 11;
+    constexpr uint8_t RSL_PIN = 23;
 
     // --- COMPRESSOR REMAP (CLEAR OF TIMER SLOTS) ---
     // Moved from Pin 8 to Pin 28 to leave Pin 8 completely open for Timer 4 servo outputs
@@ -65,7 +65,7 @@ namespace robotConfig {
     // Fully immune to background serial interrupts and idle jumping/twitching
     constexpr uint8_t MLF = 2;   // Native Hardware Timer 3 Channel B
     constexpr uint8_t MLR = 3;   // Native Hardware Timer 3 Channel A
-    constexpr uint8_t MRF = 46;  // Native Hardware Timer 5 Channel A (Moved from Pin 4)
+    constexpr uint8_t MRF = 8;   // Native Hardware Timer 4 Channel C
     constexpr uint8_t MRR = 5;   // Native Hardware Timer 3 Channel C
 
     // --- AUXILIARY TOOL MOTOR ASSIGNMENTS ---

@@ -21,12 +21,11 @@ PWMMotorController leftRear(robotConfig::MLR,PWMMotorController::ControllerType:
 PWMMotorController rightFront(robotConfig::MRF,PWMMotorController::ControllerType::Talon,true);
 PWMMotorController rightRear(robotConfig::MRR,PWMMotorController::ControllerType::Talon,true);
 
-RobotDrive drive(leftFront, leftRear, rightFront, rightRear, 0.05); // 5% joystick deadband
-BatteryMonitor battery(robotConfig::LIVE_BATT, robotConfig::R1, robotConfig::R2, robotConfig::ARDUINO_VCC, 500);
-
-
+RobotDrive drive(leftFront, leftRear, rightFront, rightRear, 0.05); // % joystick deadband
+BatteryMonitor battery(robotConfig::LIVE_BATT, robotConfig::R1, robotConfig::R2, robotConfig::ARDUINO_VCC, 1000);
 
 unsigned long lastSafetyCheckTime = 0;
+unsigned long lastTelemetryTime = 0; // Added tracking metric for isolated telemetry frames
 
 void setup() {
   Serial.begin(MON_BAUD_RATE);
@@ -40,18 +39,26 @@ void setup() {
 
 void loop() {
   FScontroller.update(); // Keep background telemetry and serial caching alive
-  battery.update();
+  
+  unsigned long currentTime = millis();
+  
+  // FIX: Throttles background telemetry transmission frames to a slow 5Hz rate.
+  // This relieves high-frequency loop noise and Serial2 half-duplex back-feeding 
+  // issues from echoing directly into your logic pins while the robot sits idle.
+  if (currentTime - lastTelemetryTime >= 200) {
+    lastTelemetryTime = currentTime;
+    battery.update();
+    FScontroller.sendBatteryVoltage(battery.getTelemetryVoltage());
+  }
 
   bool robotEnabled = FScontroller.isReceiverHardwareConnected();
   m_RSL.setEnabled(robotEnabled);
 
-  //m_compressor.update();
+  m_compressor.update();
   m_RSL.update();
 
   // HARDWARE SAFEGUARD: Executes if the controller is off or disconnected
   if (!robotEnabled) {
-    unsigned long currentTime = millis();
-    
     // Slow down the safety loop to execute only once every 200 milliseconds (5Hz)
     if (currentTime - lastSafetyCheckTime >= 200) {
       lastSafetyCheckTime = currentTime;
@@ -72,19 +79,26 @@ void loop() {
     // values you configured directly inside your FlySky Transmitter setup menu.
 
     // ==> EXECUTE DRIVING OUTPUT SCHEDULERS HERE <==
-
-    // Feed current system voltage reading back to FScontroller screen
-    FScontroller.sendBatteryVoltage(battery.getTelemetryVoltage());
+    drive.drive(FScontroller, robotConfig::CH_PITCH, robotConfig::CH_ROLL);
 
     FScontroller.readSwitch(robotConfig::CH_SWA, false) ? singlerelay1.activate() : singlerelay1.deactivate();
     FScontroller.readSwitch(robotConfig::CH_SWB, false) ? singlerelay2.activate() : singlerelay2.deactivate();
     FScontroller.readSwitch(robotConfig::CH_SWD, false) ? doublerelay3.activate() : doublerelay3.deactivate();
 
-    drive.drive(FScontroller, robotConfig::CH_PITCH, robotConfig::CH_ROLL);
-
-    
+    Switch3Way SWCPos = FScontroller.read3WaySwitch(robotConfig::CH_SWC,SWITCH_UP);
+    switch (SWCPos) {
+      case Switch3Way::SWITCH_UP:
+          m_compressor.disable();
+          break;
+      case Switch3Way::SWITCH_MID:
+          m_compressor.enable();
+          break;
+      case Switch3Way::SWITCH_DOWN:
+          m_compressor.enable();
+          break;
+    }
+  }
 
     // Call diagnostic tool safely without introducing motor stuttering lags
     //FScontroller.printDebugChannels(); 
-  }
 }

@@ -40,7 +40,15 @@ double RobotDrive::applyDeadband(double value)
         return 0.0;
     }
 
-    return value;
+    // Smoothly scale the remaining range so it starts exactly at 0.0
+    if (value > 0.0)
+    {
+        return (value - _deadband) / (1.0 - _deadband);
+    }
+    else
+    {
+        return (value + _deadband) / (1.0 - _deadband);
+    }
 }
 
 void RobotDrive::drive(

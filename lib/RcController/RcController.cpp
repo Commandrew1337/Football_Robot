@@ -106,14 +106,14 @@ Switch3Way RcController::read3WaySwitch(byte channelInput, Switch3Way defaultVal
   // Route failsafe through the cache memory to maintain structural continuity
   if (ch == 0) {
     int cachedVal = _lastValidMappedValues[channelInput];
-    if (cachedVal > 33) return SWITCH_UP;
+    if (cachedVal > 33) return SWITCH_DOWN;
     if (cachedVal >= -33 && cachedVal <= 33) return SWITCH_MID;
-    return SWITCH_DOWN;
+    return SWITCH_UP;
   }
 
-  if (ch > 1750) return SWITCH_UP;
+  if (ch > 1750) return SWITCH_DOWN;
   if (ch >= 1250 && ch <= 1750) return SWITCH_MID;
-  return SWITCH_DOWN;
+  return SWITCH_UP;
 }
 
 // Internally timed console logger protecting the MCU cycle rate from heavy string buffering overhead
