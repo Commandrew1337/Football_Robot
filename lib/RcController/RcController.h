@@ -26,6 +26,10 @@ class RcController {
     
     unsigned long lastValidPacketTime;          // Watchdog timer tracking for physical cable health
 
+    // --- SMOOTHING CACHE ---
+    // History caching array to swallow single-frame radio packet drops and handle safe defaults
+    int _lastValidMappedValues[10];
+
   public:
     // Constructor
     RcController(HardwareSerial& rcSer, HardwareSerial& sensSer, HardwareSerial& dbgSer);

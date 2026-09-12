@@ -8,11 +8,10 @@ PWMMotorController::PWMMotorController(
       _type(type),
       _inverted(inverted)
 {
-    // FIX: Removed _servo.attach(_pin) from here. 
-    // It is dangerous to link hardware pins globally before setup() handles system timers.
+    // Constructor kept clean of early global attachments
 }
 
-// FIX: Added the explicit initialization gate to be executed inside setup()
+// Hardware initialization routine executed inside setup() after system timers wake up
 void PWMMotorController::begin()
 {
     _servo.attach(_pin);
@@ -53,12 +52,12 @@ PWMMotorController::getCalibration() const
             };
 
         case ControllerType::Talon:
-            // FIX: Replaced identical 1500 metrics with actual deadband safety cushions
+            // RoboRIO Profile Safety Bounds: Immune to serial parsing timing drift creeping
             return {
                 2037, // Full Forward
-                1539, // Deadband High (Prevents background serial interrupt drift crawling)
-                1507, // Center (Matches stored roboRIO profile memory standard)
-                1454, // Deadband Low  (Prevents background serial interrupt drift crawling)
+                1539, // Deadband High 
+                1507, // Center 
+                1454, // Deadband Low  
                 1026  // Full Reverse
             };
 

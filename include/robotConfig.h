@@ -16,13 +16,16 @@ namespace robotConfig {
     //   - Pins 16 & 17 (Serial2) : Reserved for your FlySky Telemetry Loop.
     //   - Pins 14 & 15 (Serial3) : Keep EMPTY. Used for serial loops.
     //
-    // ⚡ SERVO LIBRARY & PWM COMPATIBILITY RULES
-    //   - If using 'PWMMotorController' (Servo.h), you MUST use pins with 
-    //     internal hardware timers. 
-    //   - SAFE LOW PWM PINS  : 2, 3, 4, 5, 6, 7, 11, 12
-    //   - SAFE HIGH PWM PINS : 44, 45, 46 (Driven by high-precision Timer 5)
-    //   - DO NOT USE FOR MOTORS: Pins 22-43. These are pure digital pins lacking
-    //     hardware clocks. Servos assigned here will jitter, lag, or fail to arm.
+    // ⚡ HARDWARE PWM TIMERS & COMPATIBILITY RULES
+    //   - Because we switched to 'Servo_Hardware_PWM.h' to eliminate background 
+    //     serial jitter, you MUST use pins hardwired to 16-bit Hardware Timers.
+    //   - NATIVE TIMERS SEIZED: Timer 3 (Pins 2, 3, 5), Timer 4 (Pins 6, 7, 8), 
+    //                           and Timer 5 (Pins 44, 45, 46).
+    //   - 🛑 PIN 4 INCOMPATIBILITY WARNING: Pin 4 runs on an 8-bit clock (Timer 0) 
+    //     and CANNOT generate high-precision 16-bit hardware waves. Right Front 
+    //     Motor (MRF) was moved to Pin 46 to protect drivetrain symmetry.
+    //   - 🛑 PIN 8 HARWARE TIMING RESERVATION: Pin 8 is seized by Timer 4. The 
+    //     Compressor Pressure Switch was moved to Pin 28 to prevent data clashes.
     //
     // 🔌 ACTIVE-LOW RELAY BANK STARTUP SAFETY
     //   - Pins 24-27 float LOW during power-on/boot text flushes.
@@ -36,28 +39,35 @@ namespace robotConfig {
     // ============================================================================
     // "byte" = "uint8_t"
 
+    // --- SAFE DIGITAL PERIPHERALS (NO CONFLICTS) ---
     const uint8_t RELAY_IN1 = 24;
     const uint8_t RELAY_IN2 = 25;
     const uint8_t RELAY_IN3 = 26;
     const uint8_t RELAY_IN4 = 27;
 
-    constexpr uint8_t COMPRESSOR_PRESSURE_SWITCH = 8;
+    constexpr uint8_t HORN_SPIKE_REVERSE = 22;
+    constexpr uint8_t HORN_SPIKE_FORWARD = 12;
+    constexpr uint8_t RSL_PIN = 11;
+
+    // --- COMPRESSOR REMAP (CLEAR OF TIMER SLOTS) ---
+    // Moved from Pin 8 to Pin 28 to leave Pin 8 completely open for Timer 4 servo outputs
+    constexpr uint8_t COMPRESSOR_PRESSURE_SWITCH = 28; 
     constexpr uint8_t COMPRESSOR_SPIKE_REVERSE = 9;
     constexpr uint8_t COMPRESSOR_SPIKE_FORWARD = 10;
 
-    constexpr uint8_t HORN_SPIKE_REVERSE = 22;
-    constexpr uint8_t HORN_SPIKE_FORWARD = 12;
+    // --- DRIVETRAIN REMAP (100% PURE HARDWARE TIMERS) ---
+    // Fully immune to background serial interrupts and idle jumping/twitching
+    constexpr uint8_t MLF = 2;   // Native Hardware Timer 3 Channel B
+    constexpr uint8_t MLR = 3;   // Native Hardware Timer 3 Channel A
+    constexpr uint8_t MRF = 46;  // Native Hardware Timer 5 Channel A (Moved from Pin 4)
+    constexpr uint8_t MRR = 5;   // Native Hardware Timer 3 Channel C
 
-    constexpr uint8_t RSL_PIN = 11;
-
-    constexpr uint8_t MLF = 2;
-    constexpr uint8_t MLR = 3;
-    constexpr uint8_t MRF = 4;
-    constexpr uint8_t MRR = 5;
-    constexpr uint8_t MT1 = 6;
-    constexpr uint8_t MT2 = 7;
-    constexpr uint8_t MT3 = 45;
-    constexpr uint8_t MT4 = 44;    
+    // --- AUXILIARY TOOL MOTOR ASSIGNMENTS ---
+    // Fully immune to background serial interrupts and idle jumping/twitching
+    constexpr uint8_t MT1 = 6;   // Native Hardware Timer 4 Channel A
+    constexpr uint8_t MT2 = 7;   // Native Hardware Timer 4 Channel B
+    constexpr uint8_t MT3 = 45;  // Native Hardware Timer 5 Channel B
+    constexpr uint8_t MT4 = 44;  // Native Hardware Timer 5 Channel C 
 
     // ============================================================================
     // ROBOT TUNING & CALIBRATION CONSTANTS

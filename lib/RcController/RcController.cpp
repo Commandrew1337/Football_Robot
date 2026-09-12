@@ -3,7 +3,19 @@
 // Constructor implementation linking hardware references
 RcController::RcController(HardwareSerial& rcSer, HardwareSerial& sensSer, HardwareSerial& dbgSer) 
   : rcSerial(rcSer), sensSerial(sensSer), debugSerial(dbgSer), 
-    lastExecutionTime(0), lastPrintTime(0), lastWarningTime(0), lastValidPacketTime(0) {}
+    lastExecutionTime(0), lastPrintTime(0), lastWarningTime(0), lastValidPacketTime(0) 
+{
+  // Seed physical resting-state default baselines at startup
+  _lastValidMappedValues[0] = 0;    // Ch1: Roll / Steering Stick (Center)
+  _lastValidMappedValues[1] = 0;    // Ch2: Pitch / Throttle Stick (Center)
+  _lastValidMappedValues[2] = -100; // Ch3: Main Throttle Stick (Absolute Bottom)
+  _lastValidMappedValues[3] = 0;    // Ch4: Yaw / Steering Stick (Center)
+  
+  // Channels 5 through 10 (Switches A, B, C, D and Analog Dials A, B) default safely to minimum
+  for (int i = 4; i < 10; i++) {
+    _lastValidMappedValues[i] = -100;
+  }
+}
 
 // Initializes the iBUS subsystems
 void RcController::begin() {
@@ -15,6 +27,7 @@ void RcController::begin() {
 
 // Background handler that must be called unfiltered at top-level loop speed
 void RcController::update() {
+  ibusRc.loop();   // Processes incoming stick movements
   ibusSens.loop(); // Pulls raw background serial data for library caching
 }
 
@@ -57,24 +70,46 @@ void RcController::sendBatteryVoltage(int millivolts) {
 
 // Reads stick state and clamps output constraints dynamically
 int RcController::readChannel(byte channelInput, int minLimit, int maxLimit, int defaultValue) {
+  if (channelInput >= 10) return defaultValue;
+
   uint16_t ch = ibusRc.readChannel(channelInput);
-  if (ch == 0) return defaultValue;
+  
+  // FAILSAFE MITIGATION: If a background frame drops (returns 0), smoothly supply 
+  // the last successfully cached position instead of forcing a sudden zero-drop.
+  if (ch == 0) {
+    return _lastValidMappedValues[channelInput];
+  }
   
   int mappedValue = map(ch, 1000, 2000, minLimit, maxLimit);
-  return constrain(mappedValue, minLimit, maxLimit);
+  mappedValue = constrain(mappedValue, minLimit, maxLimit);
+  
+  // Update internal cache memory with this valid value
+  _lastValidMappedValues[channelInput] = mappedValue;
+  
+  return mappedValue;
 }
 
 // Returns state map for binary switches
 bool RcController::readSwitch(byte channelInput, bool defaultValue) {
-  int intDefaultValue = defaultValue ? 100 : 0;
-  int ch = readChannel(channelInput, 0, 100, intDefaultValue);
-  return (ch > 50);
+  // Force default ranges and limits to evaluate within a clean -100 to 100 spectrum
+  int intDefaultValue = defaultValue ? 100 : -100;
+  int ch = readChannel(channelInput, -100, 100, intDefaultValue);
+  
+  // Symmetrical mid-point evaluation crossing zero
+  return (ch > 0);
 }
 
 // Evaluates 3-way toggle switch signal bounds matching physically native FlySky ranges
 Switch3Way RcController::read3WaySwitch(byte channelInput, Switch3Way defaultValue) {
   uint16_t ch = ibusRc.readChannel(channelInput);
-  if (ch == 0) return defaultValue;
+  
+  // Route failsafe through the cache memory to maintain structural continuity
+  if (ch == 0) {
+    int cachedVal = _lastValidMappedValues[channelInput];
+    if (cachedVal > 33) return SWITCH_UP;
+    if (cachedVal >= -33 && cachedVal <= 33) return SWITCH_MID;
+    return SWITCH_DOWN;
+  }
 
   if (ch > 1750) return SWITCH_UP;
   if (ch >= 1250 && ch <= 1750) return SWITCH_MID;
@@ -90,7 +125,8 @@ void RcController::printDebugChannels() {
       debugSerial.print("Ch");
       debugSerial.print(i + 1);
       debugSerial.print(": ");
-      debugSerial.print(readChannel(i, -100, 100, 0));
+      // Dynamically pass the channel's custom resting cache array value as the fallback tracker target
+      debugSerial.print(readChannel(i, -100, 100, _lastValidMappedValues[i])); 
       debugSerial.print("\t");
     }
     debugSerial.println();

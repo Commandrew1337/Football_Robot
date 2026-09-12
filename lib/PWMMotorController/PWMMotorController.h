@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include <Servo.h>
+#include <Servo_Hardware_PWM.h> // Daniel Duller's hardware replacement layer
 
 class PWMMotorController
 {
@@ -30,7 +30,6 @@ public:
         ControllerType type,
         bool inverted = false);
 
-    // FIX: Hardware initialization routine to call inside setup()
     void begin();
 
     void set(double output);
@@ -47,7 +46,9 @@ private:
     ControllerType _type;
     bool _inverted;
     double _output = 0.0;
-    Servo _servo;
+    
+    // Using standard Servo name here links cleanly with the Hardware driver functions
+    Servo _servo; 
 
     PWMCalibration getCalibration() const;
 };

@@ -15,7 +15,12 @@ RelayValve singlerelay2(robotConfig::RELAY_IN4, true);
 RelayValve doublerelay3(robotConfig::RELAY_IN1, robotConfig::RELAY_IN2, 100, true);
 Compressor m_compressor(robotConfig::COMPRESSOR_PRESSURE_SWITCH, robotConfig::COMPRESSOR_SPIKE_FORWARD, robotConfig::COMPRESSOR_SPIKE_REVERSE);
 RSL m_RSL(robotConfig::RSL_PIN);
-PWMMotorController MotorTest(robotConfig::MLF,PWMMotorController::ControllerType::Talon);
+PWMMotorController leftFront(robotConfig::MLF,PWMMotorController::ControllerType::Talon);
+PWMMotorController leftRear(robotConfig::MLR,PWMMotorController::ControllerType::Talon);
+PWMMotorController rightFront(robotConfig::MRF,PWMMotorController::ControllerType::Talon,true);
+PWMMotorController rightRear(robotConfig::MRR,PWMMotorController::ControllerType::Talon,true);
+
+RobotDrive drive(leftFront, leftRear, rightFront, rightRear, 0.05); // 5% joystick deadband
 
 
 
@@ -24,7 +29,10 @@ unsigned long lastSafetyCheckTime = 0;
 void setup() {
   Serial.begin(MON_BAUD_RATE);
   FScontroller.begin();
-  MotorTest.begin();
+  leftFront.begin();
+  leftRear.begin();
+  rightFront.begin();
+  rightRear.begin();
 }
 
 void loop() {
@@ -47,6 +55,7 @@ void loop() {
       singlerelay1.deactivate();
       singlerelay2.deactivate();
       doublerelay3.deactivate(); 
+      drive.stop();
     }
     return; // Safe to return here because the timer throttles the code paths below
   }
@@ -68,9 +77,11 @@ void loop() {
     FScontroller.readSwitch(robotConfig::CH_SWB, false) ? singlerelay2.activate() : singlerelay2.deactivate();
     FScontroller.readSwitch(robotConfig::CH_SWD, false) ? doublerelay3.activate() : doublerelay3.deactivate();
 
-    MotorTest.set(FScontroller.readChannel(robotConfig::CH_PITCH,-100,100,0)/100.0);
+    drive.drive(FScontroller, robotConfig::CH_PITCH, robotConfig::CH_ROLL);
+
+    
 
     // Call diagnostic tool safely without introducing motor stuttering lags
-    FScontroller.printDebugChannels(); 
+    //FScontroller.printDebugChannels(); 
   }
 }
