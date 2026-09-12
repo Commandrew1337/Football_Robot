@@ -8,6 +8,7 @@
 #include "Compressor.h"
 
 #include "RobotDrive.h"
+#include "BatteryMonitor.h"
 
 RcController FScontroller(Serial1, Serial2, Serial);
 RelayValve singlerelay1(robotConfig::RELAY_IN3, true);
@@ -21,6 +22,7 @@ PWMMotorController rightFront(robotConfig::MRF,PWMMotorController::ControllerTyp
 PWMMotorController rightRear(robotConfig::MRR,PWMMotorController::ControllerType::Talon,true);
 
 RobotDrive drive(leftFront, leftRear, rightFront, rightRear, 0.05); // 5% joystick deadband
+BatteryMonitor battery(robotConfig::LIVE_BATT, robotConfig::R1, robotConfig::R2, robotConfig::ARDUINO_VCC, 500);
 
 
 
@@ -33,10 +35,12 @@ void setup() {
   leftRear.begin();
   rightFront.begin();
   rightRear.begin();
+  battery.begin();
 }
 
 void loop() {
   FScontroller.update(); // Keep background telemetry and serial caching alive
+  battery.update();
 
   bool robotEnabled = FScontroller.isReceiverHardwareConnected();
   m_RSL.setEnabled(robotEnabled);
@@ -70,8 +74,7 @@ void loop() {
     // ==> EXECUTE DRIVING OUTPUT SCHEDULERS HERE <==
 
     // Feed current system voltage reading back to FScontroller screen
-    int liveBatteryVolt = 1240; 
-    FScontroller.sendBatteryVoltage(liveBatteryVolt);
+    FScontroller.sendBatteryVoltage(battery.getTelemetryVoltage());
 
     FScontroller.readSwitch(robotConfig::CH_SWA, false) ? singlerelay1.activate() : singlerelay1.deactivate();
     FScontroller.readSwitch(robotConfig::CH_SWB, false) ? singlerelay2.activate() : singlerelay2.deactivate();

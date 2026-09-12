@@ -39,6 +39,12 @@ namespace robotConfig {
     // ============================================================================
     // "byte" = "uint8_t"
 
+    //Battery Voltage Measurement
+    const float R1 = 9840.0;
+    const float R2 = 4636.0;
+    const uint8_t LIVE_BATT = A0;
+    const float ARDUINO_VCC = 4.959;
+
     // --- SAFE DIGITAL PERIPHERALS (NO CONFLICTS) ---
     const uint8_t RELAY_IN1 = 24;
     const uint8_t RELAY_IN2 = 25;
