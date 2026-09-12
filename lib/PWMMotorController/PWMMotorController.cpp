@@ -8,11 +8,15 @@ PWMMotorController::PWMMotorController(
       _type(type),
       _inverted(inverted)
 {
+    // FIX: Removed _servo.attach(_pin) from here. 
+    // It is dangerous to link hardware pins globally before setup() handles system timers.
+}
+
+// FIX: Added the explicit initialization gate to be executed inside setup()
+void PWMMotorController::begin()
+{
     _servo.attach(_pin);
-
     PWMCalibration cal = getCalibration();
-
-    // Initialize to neutral.
     _servo.writeMicroseconds(cal.center);
 }
 
@@ -49,12 +53,13 @@ PWMMotorController::getCalibration() const
             };
 
         case ControllerType::Talon:
+            // FIX: Replaced identical 1500 metrics with actual deadband safety cushions
             return {
-                2000,
-                1500,
-                1500,
-                1500,
-                1000
+                2037, // Full Forward
+                1539, // Deadband High (Prevents background serial interrupt drift crawling)
+                1507, // Center (Matches stored roboRIO profile memory standard)
+                1454, // Deadband Low  (Prevents background serial interrupt drift crawling)
+                1026  // Full Reverse
             };
 
         case ControllerType::Spark:
@@ -146,36 +151,3 @@ PWMMotorController::getType() const
 {
     return _type;
 }
-
-
-
-/* Example Usage
-#include <Arduino.h>
-#include "PWMMotorController.h"
-
-PWMMotorController leftMotor(
-    5,
-    PWMMotorController::ControllerType::Victor888);
-
-PWMMotorController rightMotor(
-    6,
-    PWMMotorController::ControllerType::Victor888,
-    true); // inverted
-
-void setup()
-{
-}
-
-void loop()
-{
-    leftMotor.set(0.50);
-    rightMotor.set(0.50);
-
-    delay(2000);
-
-    leftMotor.stop();
-    rightMotor.stop();
-
-    delay(1000);
-}
-*/

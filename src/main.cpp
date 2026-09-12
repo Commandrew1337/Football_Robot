@@ -15,12 +15,16 @@ RelayValve singlerelay2(robotConfig::RELAY_IN4, true);
 RelayValve doublerelay3(robotConfig::RELAY_IN1, robotConfig::RELAY_IN2, 100, true);
 Compressor m_compressor(robotConfig::COMPRESSOR_PRESSURE_SWITCH, robotConfig::COMPRESSOR_SPIKE_FORWARD, robotConfig::COMPRESSOR_SPIKE_REVERSE);
 RSL m_RSL(robotConfig::RSL_PIN);
+PWMMotorController MotorTest(robotConfig::MLF,PWMMotorController::ControllerType::Talon);
+
+
 
 unsigned long lastSafetyCheckTime = 0;
 
 void setup() {
   Serial.begin(MON_BAUD_RATE);
   FScontroller.begin();
+  MotorTest.begin();
 }
 
 void loop() {
@@ -53,8 +57,6 @@ void loop() {
     // Read and interpret stick movements smoothly.
     // If transmitter is off, these will automatically return whatever default failsafe 
     // values you configured directly inside your FlySky Transmitter setup menu.
-    //int throttle = FScontroller.readChannel(2, -255, 255, 0);
-    //int steering = FScontroller.readChannel(0, -255, 255, 0);
 
     // ==> EXECUTE DRIVING OUTPUT SCHEDULERS HERE <==
 
@@ -65,6 +67,8 @@ void loop() {
     FScontroller.readSwitch(robotConfig::CH_SWA, false) ? singlerelay1.activate() : singlerelay1.deactivate();
     FScontroller.readSwitch(robotConfig::CH_SWB, false) ? singlerelay2.activate() : singlerelay2.deactivate();
     FScontroller.readSwitch(robotConfig::CH_SWD, false) ? doublerelay3.activate() : doublerelay3.deactivate();
+
+    MotorTest.set(FScontroller.readChannel(robotConfig::CH_PITCH,-100,100,0)/100.0);
 
     // Call diagnostic tool safely without introducing motor stuttering lags
     FScontroller.printDebugChannels(); 
