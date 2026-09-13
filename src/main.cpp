@@ -6,6 +6,7 @@
 #include "RSL.h"
 #include "RelayValve.h"
 #include "Compressor.h"
+#include "SpikeRelay.h"
 
 #include "RobotDrive.h"
 #include "BatteryMonitor.h"
@@ -16,12 +17,13 @@ RelayValve singlerelay2(robotConfig::RELAY_IN4, true);
 RelayValve doublerelay3(robotConfig::RELAY_IN1, robotConfig::RELAY_IN2, 100, true);
 Compressor m_compressor(robotConfig::COMPRESSOR_PRESSURE_SWITCH, robotConfig::COMPRESSOR_SPIKE_FORWARD, robotConfig::COMPRESSOR_SPIKE_REVERSE);
 RSL m_RSL(robotConfig::RSL_PIN);
+SpikeRelay horn(robotConfig::HORN_SPIKE_FORWARD,robotConfig::HORN_SPIKE_REVERSE);
 PWMMotorController leftFront(robotConfig::MLF,PWMMotorController::ControllerType::Talon);
 PWMMotorController leftRear(robotConfig::MLR,PWMMotorController::ControllerType::Talon);
 PWMMotorController rightFront(robotConfig::MRF,PWMMotorController::ControllerType::Talon,true);
 PWMMotorController rightRear(robotConfig::MRR,PWMMotorController::ControllerType::Talon,true);
 
-RobotDrive drive(leftFront, leftRear, rightFront, rightRear, 0.05); // % joystick deadband
+RobotDrive drive(leftFront, leftRear, rightFront, rightRear, 0.05); // 5% joystick deadband
 BatteryMonitor battery(robotConfig::LIVE_BATT, robotConfig::R1, robotConfig::R2, robotConfig::ARDUINO_VCC, 1000);
 
 unsigned long lastSafetyCheckTime = 0;
@@ -42,7 +44,7 @@ void loop() {
   
   unsigned long currentTime = millis();
   
-  // FIX: Throttles background telemetry transmission frames to a slow 5Hz rate.
+  // Throttles background telemetry transmission frames to a slow 5Hz rate.
   // This relieves high-frequency loop noise and Serial2 half-duplex back-feeding 
   // issues from echoing directly into your logic pins while the robot sits idle.
   if (currentTime - lastTelemetryTime >= 200) {
@@ -67,6 +69,7 @@ void loop() {
       singlerelay2.deactivate();
       doublerelay3.deactivate(); 
       drive.stop();
+      horn.off();
     }
     return; // Safe to return here because the timer throttles the code paths below
   }
@@ -84,6 +87,13 @@ void loop() {
     FScontroller.readSwitch(robotConfig::CH_SWA, false) ? singlerelay1.activate() : singlerelay1.deactivate();
     FScontroller.readSwitch(robotConfig::CH_SWB, false) ? singlerelay2.activate() : singlerelay2.deactivate();
     FScontroller.readSwitch(robotConfig::CH_SWD, false) ? doublerelay3.activate() : doublerelay3.deactivate();
+
+    int FSyaw = FScontroller.readChannel(robotConfig::CH_YAW,-100,100,0);
+    if (abs(FSyaw)>95){
+      horn.forward();
+    } else {
+      horn.off();
+    }
 
     Switch3Way SWCPos = FScontroller.read3WaySwitch(robotConfig::CH_SWC,SWITCH_UP);
     switch (SWCPos) {
