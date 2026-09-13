@@ -7,6 +7,7 @@
 #include "RelayValve.h"
 #include "Compressor.h"
 #include "SpikeRelay.h"
+#include "LaunchWheels.h"
 
 #include "RobotDrive.h"
 #include "BatteryMonitor.h"
@@ -23,6 +24,12 @@ PWMMotorController leftRear(robotConfig::MLR,PWMMotorController::ControllerType:
 PWMMotorController rightFront(robotConfig::MRF,PWMMotorController::ControllerType::Talon,true);
 PWMMotorController rightRear(robotConfig::MRR,PWMMotorController::ControllerType::Talon,true);
 
+PWMMotorController launcherLeftA(robotConfig::MT2,PWMMotorController::ControllerType::Jaguar);
+PWMMotorController launcherLeftB(robotConfig::MT4,PWMMotorController::ControllerType::Jaguar,true);
+PWMMotorController launcherRightA(robotConfig::MT1,PWMMotorController::ControllerType::Jaguar);
+PWMMotorController launcherRightB(robotConfig::MT3,PWMMotorController::ControllerType::Jaguar,true);
+LaunchWheels launchWheels(launcherLeftA,launcherLeftB,launcherRightA,launcherRightB);
+
 RobotDrive drive(leftFront, leftRear, rightFront, rightRear, 0.05); // 5% joystick deadband
 BatteryMonitor battery(robotConfig::LIVE_BATT, robotConfig::R1, robotConfig::R2, robotConfig::ARDUINO_VCC, 1000);
 
@@ -37,6 +44,12 @@ void setup() {
   rightFront.begin();
   rightRear.begin();
   battery.begin();
+  launcherLeftA.begin();
+  launcherLeftB.begin();
+  launcherRightA.begin();
+  launcherRightB.begin();
+  launchWheels.enable();
+  launchWheels.stop();
 }
 
 void loop() {
@@ -106,6 +119,10 @@ void loop() {
       case Switch3Way::SWITCH_DOWN:
           m_compressor.enable();
           break;
+    }
+
+    if (launchWheels.isEnabled()) {
+        launchWheels.launch(FScontroller,robotConfig::CH_THROTTLE);
     }
   }
 
