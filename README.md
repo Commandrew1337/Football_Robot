@@ -1,19 +1,33 @@
-### FlySky iBUS Interface via Arduino Mega
+# Football Robot
 
-A robust, fail-safe C++ implementation for decoding multi-channel RC signals using an **Arduino Mega 2560** and the **FlySky FS-i6X / FS-iA10B** radio system via the serial **iBUS protocol**. 
+A robust, fail-safe C++ control and telemetry system for an **Arduino Mega 2560** using a **FlySky FS-i6X / FS-iA10B** radio system via the serial **iBUS protocol**.
 
-This system forms the core control and telemetry framework for a **football shooting robot**. 
+The system provides:
 
-### 🏗️ System Architecture & Environment
+- FlySky iBUS RC control
+- Four-motor drivetrain control
+- Pneumatic valve and relay control
+- Compressor control
+- Horn control
+- Robot Signal Light (RSL) control
+- Battery voltage monitoring and telemetry
+- Receiver disconnect failsafe
 
-The project leverages a dedicated hardware serial subsystem to ensure low-latency control loops while maintaining an active debugging link. 
+## System Architecture & Environment
+
+The project uses the Arduino Mega's hardware serial interfaces for low-latency RC control, telemetry, and serial communication.
 
 ### Environment
 
-* **Framework:** Arduino Core (C++)
-* **IDE / Toolchain:** PlatformIO (VS Code extension)
-* **Primary Dependency:** bmellink/IBusBM library
+- **Microcontroller:** Arduino Mega 2560
+- **Framework:** Arduino Core (C++)
+- **IDE / Toolchain:** PlatformIO (VS Code extension)
+- **RC System:** FlySky FS-i6X / FS-iA10B
+- **RC Protocol:** Serial iBUS
+- **Primary Dependency:** bmellink/IBusBM
 
-### 📄 License
+Hardware pins and RC channel assignments are defined in `robotConfig.h`.
+
+## 📄 License
 
 This repository is distributed under the open-source [MIT License](LICENSE).
