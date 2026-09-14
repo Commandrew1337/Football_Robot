@@ -24,10 +24,10 @@ PWMMotorController leftRear(robotConfig::MLR,PWMMotorController::ControllerType:
 PWMMotorController rightFront(robotConfig::MRF,PWMMotorController::ControllerType::Talon,true);
 PWMMotorController rightRear(robotConfig::MRR,PWMMotorController::ControllerType::Talon,true);
 
-PWMMotorController launcherLeftA(robotConfig::MT2,PWMMotorController::ControllerType::Jaguar);
-PWMMotorController launcherLeftB(robotConfig::MT4,PWMMotorController::ControllerType::Jaguar,true);
-PWMMotorController launcherRightA(robotConfig::MT1,PWMMotorController::ControllerType::Jaguar);
-PWMMotorController launcherRightB(robotConfig::MT3,PWMMotorController::ControllerType::Jaguar,true);
+PWMMotorController launcherLeftA(robotConfig::MT2,PWMMotorController::ControllerType::Talon);
+PWMMotorController launcherLeftB(robotConfig::MT4,PWMMotorController::ControllerType::Talon,true);
+PWMMotorController launcherRightA(robotConfig::MT1,PWMMotorController::ControllerType::Talon);
+PWMMotorController launcherRightB(robotConfig::MT3,PWMMotorController::ControllerType::Talon,true);
 LaunchWheels launchWheels(launcherLeftA,launcherLeftB,launcherRightA,launcherRightB);
 
 RobotDrive drive(leftFront, leftRear, rightFront, rightRear, 0.05); // 5% joystick deadband
