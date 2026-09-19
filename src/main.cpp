@@ -51,6 +51,9 @@ void setup() {
   launcherRightB.begin();
   launchWheels.enable();
   launchWheels.stop();
+  horn.off();
+  lights.off();
+  m_compressor.stop();
 }
 
 void loop() {
@@ -84,6 +87,7 @@ void loop() {
       doublerelay3.deactivate(); 
       drive.stop();
       horn.off();
+      lights.off();
     }
     return; // Safe to return here because the timer throttles the code paths below
   }
