@@ -53,6 +53,8 @@ namespace robotConfig {
 
     constexpr uint8_t HORN_SPIKE_REVERSE = 22;
     constexpr uint8_t HORN_SPIKE_FORWARD = 12;
+    constexpr uint8_t LIGHTS_SPIKE_FORWARD = 30;
+    constexpr uint8_t LIGHTS_SPIKE_REVERSE = 31;
     constexpr uint8_t RSL_PIN = 23;
 
     // --- COMPRESSOR REMAP (CLEAR OF TIMER SLOTS) ---
