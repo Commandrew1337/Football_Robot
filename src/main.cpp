@@ -103,7 +103,7 @@ void loop() {
     drive.drive(FScontroller, robotConfig::CH_PITCH, robotConfig::CH_ROLL);
 
     FScontroller.readSwitch(robotConfig::CH_SWA, false) ? doublerelay3.activate() : doublerelay3.deactivate();
-    //FScontroller.readSwitch(robotConfig::CH_SWB, false) ? singlerelay2.activate() : singlerelay2.deactivate();
+    FScontroller.readSwitch(robotConfig::CH_SWB, false) ? singlerelay1.activate() : singlerelay1.deactivate();
     FScontroller.readSwitch(robotConfig::CH_SWD, false) ? lights.forward() : lights.off();
 
     int FSyaw = FScontroller.readChannel(robotConfig::CH_YAW,-100,100,0);
