@@ -51,8 +51,8 @@ void LaunchWheels::setSpeed(double speed)
     // Negative values are clamped to zero.
     speed = clamp(speed);
 
-    _leftA.set(speed);
-    _leftB.set(speed);
+    _leftA.set(speed*1.0);
+    _leftB.set(speed*1.0);
 
     _rightA.set(speed);
     _rightB.set(speed);

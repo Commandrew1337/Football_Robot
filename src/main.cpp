@@ -27,8 +27,8 @@ PWMMotorController rightRear(robotConfig::MRR,PWMMotorController::ControllerType
 
 PWMMotorController launcherLeftA(robotConfig::MT2,PWMMotorController::ControllerType::Talon);
 PWMMotorController launcherLeftB(robotConfig::MT4,PWMMotorController::ControllerType::Talon,true);
-PWMMotorController launcherRightA(robotConfig::MT1,PWMMotorController::ControllerType::Talon);
-PWMMotorController launcherRightB(robotConfig::MT3,PWMMotorController::ControllerType::Talon,true);
+PWMMotorController launcherRightA(robotConfig::MT1,PWMMotorController::ControllerType::Talon,true);
+PWMMotorController launcherRightB(robotConfig::MT3,PWMMotorController::ControllerType::Talon);
 LaunchWheels launchWheels(launcherLeftA,launcherLeftB,launcherRightA,launcherRightB);
 
 RobotDrive drive(leftFront, leftRear, rightFront, rightRear, 0.05); // 5% joystick deadband
@@ -102,8 +102,8 @@ void loop() {
     // ==> EXECUTE DRIVING OUTPUT SCHEDULERS HERE <==
     drive.drive(FScontroller, robotConfig::CH_PITCH, robotConfig::CH_ROLL);
 
-    FScontroller.readSwitch(robotConfig::CH_SWA, false) ? singlerelay1.activate() : singlerelay1.deactivate();
-    FScontroller.readSwitch(robotConfig::CH_SWB, false) ? singlerelay2.activate() : singlerelay2.deactivate();
+    FScontroller.readSwitch(robotConfig::CH_SWA, false) ? doublerelay3.activate() : doublerelay3.deactivate();
+    //FScontroller.readSwitch(robotConfig::CH_SWB, false) ? singlerelay2.activate() : singlerelay2.deactivate();
     FScontroller.readSwitch(robotConfig::CH_SWD, false) ? lights.forward() : lights.off();
 
     int FSyaw = FScontroller.readChannel(robotConfig::CH_YAW,-100,100,0);
